@@ -1,12 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/gocolly/colly/v2"
+	_ "github.com/lib/pq"
 )
 
 type Quote struct {
@@ -16,6 +18,18 @@ type Quote struct {
 
 func main() {
 	quotes := []Quote{}
+
+	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres password=postgres dbname=scrapdatabase  sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("quotes.toscrape.com"),
@@ -46,7 +60,16 @@ func main() {
 		quotes = append(quotes, q)
 	})
 
-	c.Visit("http://quotes.toscrape.com")
+	c.Visit("http://quotes.toscrape.com/page/2/")
+
+	for _, q := range quotes {
+		_, err = db.Exec("INSERT INTO quotes (quote, author) VALUES ($1, $2)", q.Quote, q.Author)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	fmt.Println("Dados inseridos com sucesso!")
 
 	WriteJsonFile(quotes)
 
