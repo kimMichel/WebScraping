@@ -1,5 +1,5 @@
 # WebScraping
-Using Colly, a Go library for web scraping, and saving the data to a PostgreSQL database inside a Docker container.
+Using Colly, a Go library for web scraping, and saving the data to a Local PostgreSQL database inside a Docker container.
 
 ## What is Web-Scraping?
 
